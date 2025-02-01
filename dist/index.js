@@ -46,6 +46,9 @@ const composeReport = (daysCount, commitMessagesList) => __awaiter(void 0, void 
         `This report will be sent to our support and moderation team, so clarity is critical.`,
         `You'll receive a list of commit messages as input.`,
         `Your goal is to summarize the important and impactful changes in **plain, simple language** that moderators can understand.`,
+        `Clearly mention any modified, added, or removed commands and explain the changes in a way that helps moderators understand their impact.`,
+        `If arguments for a command changed, list them and explain their purpose (e.g., "Added a \`reason\` argument to \`/warn\` to allow specifying why a user was warned").`,
+        `Describe how the changes **affect bot behavior** from a moderator's perspective, rather than from a developer's view.`,
         `You should explain how each change **affects the bot’s behavior**, including changes to commands, roles, permissions, or any bug fixes.`,
         `If a change affects **support workflows or moderation actions**, make sure to highlight that.`,
         `Do NOT include unnecessary technical details—focus on practical impact.`
@@ -58,6 +61,8 @@ const composeReport = (daysCount, commitMessagesList) => __awaiter(void 0, void 
         `Explain **how these changes impact moderators and support staff**.`,
         `Use **concise, simple wording**—avoid complex technical terms.`,
         `If a change affects bot behavior, **describe it clearly** (e.g., "The mute command now includes a 24-hour timeout option").`,
+        `**If a slash command was changed, explicitly mention the command name and list any added or removed arguments.**`,
+        `For example: "The \`/mute\` command now requires a \`duration\` argument."`,
         `Write in **plain text**, no formatting.`,
         `Summarize multiple small changes together when possible.`
     ].join('\n');
@@ -236,9 +241,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.sendDiscordMessage = void 0;
 const discord_js_1 = __importDefault(__nccwpck_require__(85973));
 const sendDiscordMessage = (channel, message) => __awaiter(void 0, void 0, void 0, function* () {
-    const discord = new discord_js_1.default.Client({
-        intents: []
-    });
+    const discord = new discord_js_1.default.Client({ intents: [] });
     yield discord.login(process.env.DISCORD_BOT_TOKEN);
     const discordChannel = yield discord.channels.fetch(String(channel));
     if (!discordChannel) {
@@ -247,12 +250,36 @@ const sendDiscordMessage = (channel, message) => __awaiter(void 0, void 0, void 
     if (!discordChannel.isTextBased()) {
         throw new Error(`Discord channel ${channel} is not text-based`);
     }
-    yield discordChannel.send(discord_js_1.default.MessagePayload.create(discordChannel, {
-        content: message
-    }));
+    // Split the message into multiple parts if necessary
+    const messages = splitMessage(message, 2000);
+    for (const msgPart of messages) {
+        yield discordChannel.send(discord_js_1.default.MessagePayload.create(discordChannel, {
+            content: msgPart
+        }));
+    }
     discord.destroy();
 });
 exports.sendDiscordMessage = sendDiscordMessage;
+/**
+ * Splits a long message into smaller chunks, ensuring each part is ≤ 2000 characters.
+ */
+const splitMessage = (message, maxLength = 2000) => {
+    const messages = [];
+    let currentMessage = '';
+    for (const line of message.split('\n')) {
+        if ((currentMessage + '\n' + line).length > maxLength) {
+            messages.push(currentMessage.trim()); // Push the current message
+            currentMessage = line; // Start a new message
+        }
+        else {
+            currentMessage += '\n' + line;
+        }
+    }
+    if (currentMessage.trim().length > 0) {
+        messages.push(currentMessage.trim()); // Push the last part
+    }
+    return messages;
+};
 
 
 /***/ }),

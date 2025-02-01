@@ -20,6 +20,9 @@ export const composeReport = async (
     `This report will be sent to our support and moderation team, so clarity is critical.`,
     `You'll receive a list of commit messages as input.`,
     `Your goal is to summarize the important and impactful changes in **plain, simple language** that moderators can understand.`,
+    `Clearly mention any modified, added, or removed commands and explain the changes in a way that helps moderators understand their impact.`,
+    `If arguments for a command changed, list them and explain their purpose (e.g., "Added a \`reason\` argument to \`/warn\` to allow specifying why a user was warned").`,
+    `Describe how the changes **affect bot behavior** from a moderator's perspective, rather than from a developer's view.`,
     `You should explain how each change **affects the bot’s behavior**, including changes to commands, roles, permissions, or any bug fixes.`,
     `If a change affects **support workflows or moderation actions**, make sure to highlight that.`,
     `Do NOT include unnecessary technical details—focus on practical impact.`
@@ -33,6 +36,8 @@ export const composeReport = async (
     `Explain **how these changes impact moderators and support staff**.`,
     `Use **concise, simple wording**—avoid complex technical terms.`,
     `If a change affects bot behavior, **describe it clearly** (e.g., "The mute command now includes a 24-hour timeout option").`,
+    `**If a slash command was changed, explicitly mention the command name and list any added or removed arguments.**`,
+    `For example: "The \`/mute\` command now requires a \`duration\` argument."`,
     `Write in **plain text**, no formatting.`,
     `Summarize multiple small changes together when possible.`
   ].join('\n');
