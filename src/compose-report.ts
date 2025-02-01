@@ -1,54 +1,76 @@
-import {OpenAIApi, Configuration} from 'openai'
+import { OpenAIApi, Configuration, ChatCompletionRequestMessage } from 'openai';
 
 export const composeReport = async (
-  daysCount: number,
-  commitMessagesList: string[]
+    daysCount: number,
+    commitMessagesList: string[]
 ): Promise<string> => {
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY!
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+  if (!OPENAI_API_KEY) {
+    throw new Error('Missing OpenAI API key');
+  }
 
   const openai = new OpenAIApi(
-    new Configuration({
-      apiKey: OPENAI_API_KEY
-    })
-  )
+      new Configuration({ apiKey: OPENAI_API_KEY })
+  );
 
   const systemPrompt = [
-    `You're a software delivery assistant working in a team of software developers (us) developing a software product.`,
-    `You're helping our team to write a report about the key changes that we have made to the project over the last ${daysCount} days.`,
-    `You're writing a report that will be sent to the rest of our team`,
-    `You're taking a list of commit messages as input.`,
-    `Your goal is to remind us of what those important and impactful changes that we've recently done are.`,
-    'Your goal is to make us feel proud of our work when we deliver something important and impactful.',
-    `Your goal is also to push us to do more work when we're not doing much work.`
-  ].join('\n')
+    `You're a software delivery assistant working in a team of software developers (us) developing a discord bot.`,
+    `You're helping our team to write a report about the key changes that we've made over the last ${daysCount} days.`,
+    `You're writing a report for our team.`,
+    `Your goal is to summarize important and impactful changes from commit messages to our support team.`,
+    `Make us feel proud when we achieve something big and encourage us to improve if progress is slow.`
+  ].join('\n');
+
   const userPrompt = [
-    `Write what we've done in the past tense, active voice.`,
-    `Start with a title, then a brief summary of the most important changes.`,
-    `Group by the type of work, order by importance, and use relevant emojis.`,
-    'Squash updates that are not important, or that are too specific into brief summaries.',
-    'Write in simple, casual, witty language.',
-    'Write in plain text, with no formatting.',
-    `Keep it short, summarise changes when there's many of them.`
-  ].join('\n')
+    `Write in the past tense, active voice.`,
+    `Start with a title, then a summary of key changes.`,
+    `Group by type of work, order by importance, and use relevant emojis.`,
+    `Summarize minor updates into brief points.`,
+    `Write in simple, witty language.`,
+    `Plain text only, no formatting.`,
+    `Keep it short, summarize multiple similar changes.`
+  ].join('\n');
 
-  const response = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo',
-    messages: [
-      {role: 'system', content: systemPrompt},
-      {role: 'user', content: userPrompt},
-      {role: 'user', content: 'Commit messages:'},
-      {role: 'user', content: commitMessagesList.join('\n')},
-      {role: 'assistant', content: 'Report:'}
-    ],
-    max_tokens: 300,
-    frequency_penalty: 0.5,
-    presence_penalty: 0.5,
-    temperature: 0.5,
-    top_p: 1,
-    n: 1
-  })
+  // Limit commit messages to avoid exceeding API limits
+  const limitedCommitMessages = commitMessagesList.slice(-50).join('\n');
 
-  const result = response.data.choices[0].message?.content || ''
+  const messages: ChatCompletionRequestMessage[] = [
+    { role: "system", content: systemPrompt } as const,
+    { role: "user", content: userPrompt } as const,
+    { role: "user", content: "Commit messages:" } as const,
+    { role: "user", content: limitedCommitMessages } as const,
+    { role: "assistant", content: "Report:" } as const
+  ];
 
-  return result
-}
+  const maxRetries = 5;
+  let delay = 2000; // Start with 2s delay for exponential backoff
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await openai.createChatCompletion({
+        model: "gpt-3.5-turbo",
+        messages,
+        max_tokens: 300,
+        frequency_penalty: 0.5,
+        presence_penalty: 0.5,
+        temperature: 0.5,
+        top_p: 1,
+        n: 1
+      });
+
+      return response.data.choices[0]?.message?.content || '';
+
+    } catch (error: any) {
+      if (error.response?.status === 429) {
+        console.warn(`⚠️ Rate limit hit. Retrying in ${delay / 1000}s...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff: 2s → 4s → 8s...
+      } else {
+        throw new Error(`OpenAI API Error: ${error.message}`);
+      }
+    }
+  }
+
+  throw new Error('Failed to generate report after multiple retries.');
+};

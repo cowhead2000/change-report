@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import {fetchCommitMessages} from './fetch-commit-messages'
 import {composeReport} from './compose-report'
-import {sendSlackMessage} from './send-slack-message'
 import {sendDiscordMessage} from './send-discord-message'
 
 async function run(): Promise<void> {
@@ -28,7 +27,7 @@ async function run(): Promise<void> {
     const destination = core.getInput('destination')
     const channel = core.getInput('channel')
     if (destination === 'slack') {
-      await sendSlackMessage(channel, report)
+      return;
     } else if (destination === 'discord') {
       await sendDiscordMessage(channel, report)
     } else {
