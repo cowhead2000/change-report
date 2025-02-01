@@ -15,35 +15,36 @@ export const composeReport = async (
   );
 
   const systemPrompt = [
-    `You're a software delivery assistant working in a team of software developers (us) developing a discord bot.`,
-    `You're helping our team to write reports about the key changes that we've made over the last ${daysCount} days.`,
-    `You're writing a report that will be sent to the support/moderation team`,
-    `You're taking a list of commit messages as input.`,
-    `Your goal is to summarize important and impactful changes from commit messages to our support team of server moderators.`,
-    `It's important that you help the support staff understand which part of the code that has changed.`,
-    'You should also help them understand the impact of the changes on the bots behavior in a language that they can understand.',
+    `You're a software delivery assistant working in a team of software developers (us) developing a Discord bot.`,
+    `Your task is to generate a clear, concise report summarizing key changes made in the last ${daysCount} days.`,
+    `This report will be sent to our support and moderation team, so clarity is critical.`,
+    `You'll receive a list of commit messages as input.`,
+    `Your goal is to summarize the important and impactful changes in **plain, simple language** that moderators can understand.`,
+    `You should explain how each change **affects the bot’s behavior**, including changes to commands, roles, permissions, or any bug fixes.`,
+    `If a change affects **support workflows or moderation actions**, make sure to highlight that.`,
+    `Do NOT include unnecessary technical details—focus on practical impact.`
   ].join('\n');
 
   const userPrompt = [
-    `Write what we've done in the past tense, active voice.`,
-    `Start with a title, then a brief summary of the most important changes.`,
-    `Group by the type of work, order by importance, and use relevant emojis.`,
-    'Squash updates that are not important, or that are too specific into brief summaries.',
-    'Write in simple, casual, witty language.',
-    'Talk about the changes in a way that the moderation team can understand.',
-    'Be concise, but not too concise. Summarise multiple similar changes.',
-    'Write in plain text, with no formatting.',
-    `Keep it short, summarise changes when there's many of them.`
+    `Write in the past tense, active voice.`,
+    `Start with a **clear title** (e.g., "Moderation Update: Role Management Improved").`,
+    `Provide a **brief summary** of the most important changes.`,
+    `Group changes into sections (e.g., 🛠 **Bug Fixes**, 🚀 **New Features**, ⚙️ **Improvements**).`,
+    `Explain **how these changes impact moderators and support staff**.`,
+    `Use **concise, simple wording**—avoid complex technical terms.`,
+    `If a change affects bot behavior, **describe it clearly** (e.g., "The mute command now includes a 24-hour timeout option").`,
+    `Write in **plain text**, no formatting.`,
+    `Summarize multiple small changes together when possible.`
   ].join('\n');
 
   // Limit commit messages to avoid exceeding API limits
-  const limitedCommitMessages = commitMessagesList.slice(-50).join('\n');
+  const commitMessages = commitMessagesList.join('\n'); // No hard limit
 
   const messages: ChatCompletionRequestMessage[] = [
     { role: "system", content: systemPrompt } as const,
     { role: "user", content: userPrompt } as const,
     { role: "user", content: "Commit messages:" } as const,
-    { role: "user", content: limitedCommitMessages } as const,
+    { role: "user", content: commitMessages } as const,
     { role: "assistant", content: "Report:" } as const
   ];
 
@@ -53,7 +54,7 @@ export const composeReport = async (
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await openai.createChatCompletion({
-        model: "gpt-4",
+        model: "gpt-4-turbo",
         messages,
         max_tokens: 800,
         frequency_penalty: 0.5,
