@@ -46,9 +46,9 @@ const composeReport = (daysCount, commitMessagesList) => __awaiter(void 0, void 
         `This report will be sent to our support and moderation team, so clarity is critical.`,
         `You'll receive a list of commit messages as input.`,
         `Your goal is to summarize the important and impactful changes in **plain, simple language** that moderators can understand.`,
+        `Your **main goal** is to summarize these changes while highlighting any updates to **slash commands and their arguments**.`,
         `Clearly mention any modified, added, or removed commands and explain the changes in a way that helps moderators understand their impact.`,
         `If arguments for a command changed, list them and explain their purpose (e.g., "Added a \`reason\` argument to \`/warn\` to allow specifying why a user was warned").`,
-        `Describe how the changes **affect bot behavior** from a moderator's perspective, rather than from a developer's view.`,
         `You should explain how each change **affects the bot’s behavior**, including changes to commands, roles, permissions, or any bug fixes.`,
         `If a change affects **support workflows or moderation actions**, make sure to highlight that.`,
         `Do NOT include unnecessary technical details—focus on practical impact.`
@@ -56,12 +56,11 @@ const composeReport = (daysCount, commitMessagesList) => __awaiter(void 0, void 
     const userPrompt = [
         `Write in the past tense, active voice.`,
         `Start with a **clear title** (e.g., "Moderation Update: Role Management Improved").`,
-        `Provide a **brief summary** of the most important changes.`,
         `Group changes into sections (e.g., 🛠 **Bug Fixes**, 🚀 **New Features**, ⚙️ **Improvements**).`,
         `Explain **how these changes impact moderators and support staff**.`,
         `Use **concise, simple wording**—avoid complex technical terms.`,
         `If a change affects bot behavior, **describe it clearly** (e.g., "The mute command now includes a 24-hour timeout option").`,
-        `**If a slash command was changed, explicitly mention the command name and list any added or removed arguments.**`,
+        `**If a slash command was changed, explicitly mention the command name and list any changes.**`,
         `For example: "The \`/mute\` command now requires a \`duration\` argument."`,
         `Write in **plain text**, no formatting.`,
         `Summarize multiple small changes together when possible.`
@@ -80,12 +79,12 @@ const composeReport = (daysCount, commitMessagesList) => __awaiter(void 0, void 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             const response = yield openai.createChatCompletion({
-                model: "gpt-4-turbo",
+                model: "gpt-4o",
                 messages,
-                max_tokens: 800,
+                max_tokens: 1200,
                 frequency_penalty: 0.5,
                 presence_penalty: 0.5,
-                temperature: 0.5,
+                temperature: 0.4,
                 top_p: 1,
                 n: 1
             });
