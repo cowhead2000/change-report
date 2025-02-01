@@ -17,20 +17,23 @@ export const composeReport = async (
   const systemPrompt = [
     `You're a software delivery assistant working in a team of software developers (us) developing a discord bot.`,
     `You're helping our team to write reports about the key changes that we've made over the last ${daysCount} days.`,
-    `You're writing a report for our support team that uses our discord bot.`,
+    `You're writing a report that will be sent to the support/moderation team`,
+    `You're taking a list of commit messages as input.`,
     `Your goal is to summarize important and impactful changes from commit messages to our support team of server moderators.`,
     `It's important that you help the support staff understand which part of the code that has changed.`,
-    `You should also help them understand the impact of the changes on the bot's behavior.`
+    'You should also help them understand the impact of the changes on the bots behavior in a language that they can understand.',
   ].join('\n');
 
   const userPrompt = [
-    `Write in the past tense, active voice.`,
-    `Start with a title, then a summary of key changes.`,
-    `Group by type of work, order by importance, and use relevant emojis.`,
-    `Summarize minor updates into brief points.`,
-    `Write in simple, witty language.`,
-    `Plain text only, no formatting.`,
-    `Keep it short unless needed, summarize multiple similar changes.`,
+    `Write what we've done in the past tense, active voice.`,
+    `Start with a title, then a brief summary of the most important changes.`,
+    `Group by the type of work, order by importance, and use relevant emojis.`,
+    'Squash updates that are not important, or that are too specific into brief summaries.',
+    'Write in simple, casual, witty language.',
+    'Talk about the changes in a way that the moderation team can understand.',
+    'Be concise, but not too concise. Summarise multiple similar changes.',
+    'Write in plain text, with no formatting.',
+    `Keep it short, summarise changes when there's many of them.`
   ].join('\n');
 
   // Limit commit messages to avoid exceeding API limits
@@ -50,9 +53,9 @@ export const composeReport = async (
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4",
         messages,
-        max_tokens: 300,
+        max_tokens: 800,
         frequency_penalty: 0.5,
         presence_penalty: 0.5,
         temperature: 0.5,
