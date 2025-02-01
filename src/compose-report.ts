@@ -16,10 +16,11 @@ export const composeReport = async (
 
   const systemPrompt = [
     `You're a software delivery assistant working in a team of software developers (us) developing a discord bot.`,
-    `You're helping our team to write a report about the key changes that we've made over the last ${daysCount} days.`,
-    `You're writing a report for our team.`,
-    `Your goal is to summarize important and impactful changes from commit messages to our support team.`,
-    `Make us feel proud when we achieve something big and encourage us to improve if progress is slow.`
+    `You're helping our team to write reports about the key changes that we've made over the last ${daysCount} days.`,
+    `You're writing a report for our support team that uses our discord bot.`,
+    `Your goal is to summarize important and impactful changes from commit messages to our support team of server moderators.`,
+    `It's important that you help the support staff understand which part of the code that has changed.`,
+    `You should also help them understand the impact of the changes on the bot's behavior.`
   ].join('\n');
 
   const userPrompt = [
@@ -29,7 +30,7 @@ export const composeReport = async (
     `Summarize minor updates into brief points.`,
     `Write in simple, witty language.`,
     `Plain text only, no formatting.`,
-    `Keep it short, summarize multiple similar changes.`
+    `Keep it short unless needed, summarize multiple similar changes.`,
   ].join('\n');
 
   // Limit commit messages to avoid exceeding API limits
